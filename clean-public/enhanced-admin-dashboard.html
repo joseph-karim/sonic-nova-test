@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Summerview Medical - Enhanced Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: #2c5aa0;
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .subtitle {
+            opacity: 0.9;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .nav-tabs {
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0 20px;
+            display: flex;
+            gap: 0;
+        }
+
+        .nav-tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-tab:hover {
+            background: #f8f9fa;
+        }
+
+        .nav-tab.active {
+            border-bottom-color: #2c5aa0;
+            color: #2c5aa0;
+            background: #f8f9fa;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: 600;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c5aa0;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .call-entry {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+
+        .call-entry:last-child {
+            border-bottom: none;
+        }
+
+        .call-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .call-id {
+            font-weight: 600;
+            color: #2c5aa0;
+        }
+
+        .call-status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .knowledge-editor {
+            height: 400px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            width: 100%;
+        }
+
+        .button {
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .button:hover {
+            background: #1e3f73;
+        }
+
+        .button-secondary {
+            background: #6c757d;
+        }
+
+        .button-secondary:hover {
+            background: #545b62;
+        }
+
+        .button-success {
+            background: #28a745;
+        }
+
+        .button-success:hover {
+            background: #1e7e34;
+        }
+
+        .button-danger {
+            background: #dc3545;
+        }
+
+        .button-danger:hover {
+            background: #bd2130;
+        }
+
+        .recommendation-item {
+            border-left: 4px solid #2c5aa0;
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .recommendation-item.high {
+            border-left-color: #dc3545;
+        }
+
+        .recommendation-item.medium {
+            border-left-color: #ffc107;
+        }
+
+        .recommendation-item.low {
+            border-left-color: #28a745;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .recommendation-action {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .gap-item {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .gap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .gap-category {
+            font-weight: 600;
+            color: #856404;
+        }
+
+        .gap-severity {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .severity-high {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .severity-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .severity-low {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .editor-controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .expandable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .expandable:hover {
+            background: #f1f3f4;
+        }
+
+        .expanded-content {
+            display: none;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+            margin-top: 10px;
+        }
+
+        .json-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🏥 Summerview Medical - Enhanced Admin Dashboard</h1>
+        <div class="subtitle">Knowledge Base Management & Call Analytics</div>
+    </div>
+
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
+        <div class="nav-tab" onclick="showTab('knowledge')">📚 Knowledge Bases</div>
+        <div class="nav-tab" onclick="showTab('gaps')">🔍 Knowledge Gaps</div>
+        <div class="nav-tab" onclick="showTab('recommendations')">💡 Recommendations</div>
+        <div class="nav-tab" onclick="showTab('calls')">📞 Call Logs</div>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div id="dashboard" class="tab-content active">
+        <div class="dashboard-grid">
+            <div class="panel">
+                <div class="panel-header">📈 Today's Statistics</div>
+                <div class="panel-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="stat-box">
+                            <div class="stat-number" id="totalCalls">0</div>
+                            <div class="stat-label">Total Calls</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="successRate">0%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="avgDuration">0s</div>
+                            <div class="stat-label">Avg Duration</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="knowledgeGapCount">0</div>
+                            <div class="stat-label">Knowledge Gaps</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">⚡ System Health</div>
+                <div class="panel-content">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="stat-box">
+                            <div class="stat-number" id="activeCalls">0</div>
+                            <div class="stat-label">Active Calls</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="toolErrors">0</div>
+                            <div class="stat-label">Tool Errors</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="appointmentsBooked">0</div>
+                            <div class="stat-label">Appointments Booked</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number" id="unansweredQuestions">0</div>
+                            <div class="stat-label">Unanswered Questions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Knowledge Bases Tab -->
+    <div id="knowledge" class="tab-content">
+        <!-- System Prompt Section -->
+        <div class="panel" style="margin-bottom: 20px;">
+            <div class="panel-header">
+                💬 System Prompt Configuration
+                <button class="button button-secondary" onclick="loadSystemPrompt()">🔄 Reload</button>
+            </div>
+            <div class="panel-content">
+                <div class="editor-controls">
+                    <button class="button button-success" onclick="saveSystemPrompt()">💾 Save Changes</button>
+                    <button class="button button-secondary" onclick="resetSystemPrompt()">↩️ Reset to Default</button>
+                </div>
+                <textarea id="systemPrompt" class="knowledge-editor" style="height: 300px;" placeholder="Loading system prompt..."></textarea>
+                <div id="systemPromptMessage" class="success-message"></div>
+                <div id="systemPromptError" class="error-message"></div>
+            </div>
+        </div>
+        
+        <!-- Knowledge Base Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="panel">
+                <div class="panel-header">
+                    📚 Summerview Medical Knowledge Base
+                    <button class="button button-secondary" onclick="loadSummerviewKB()">🔄 Reload</button>
+                </div>
+                <div class="panel-content">
+                    <div class="editor-controls">
+                        <button class="button button-success" onclick="saveSummerviewKB()">💾 Save Changes</button>
+                        <button class="button button-secondary" onclick="formatSummerviewJSON()">🎨 Format JSON</button>
+                        <button class="button button-danger" onclick="resetSummerviewKB()">↩️ Reset</button>
+                    </div>
+                    <textarea id="summerviewKB" class="knowledge-editor" placeholder="Loading Summerview Medical knowledge base..."></textarea>
+                    <div id="summerviewMessage" class="success-message"></div>
+                    <div id="summerviewError" class="error-message"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    🧠 Meta Knowledge Director
+                    <button class="button button-secondary" onclick="loadMetaKB()">🔄 Reload</button>
+                </div>
+                <div class="panel-content">
+                    <div class="editor-controls">
+                        <button class="button button-success" onclick="saveMetaKB()">💾 Save Changes</button>
+                        <button class="button button-secondary" onclick="formatMetaJSON()">🎨 Format JSON</button>
+                        <button class="button button-danger" onclick="resetMetaKB()">↩️ Reset</button>
+                    </div>
+                    <textarea id="metaKB" class="knowledge-editor" placeholder="Loading meta knowledge director..."></textarea>
+                    <div id="metaMessage" class="success-message"></div>
+                    <div id="metaError" class="error-message"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Knowledge Gaps Tab -->
+    <div id="gaps" class="tab-content">
+        <div class="panel">
+            <div class="panel-header">
+                🔍 Detected Knowledge Gaps
+                <button class="button button-secondary" onclick="refreshKnowledgeGaps()">🔄 Refresh</button>
+            </div>
+            <div class="panel-content">
+                <div id="knowledgeGaps">Loading knowledge gaps...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations Tab -->
+    <div id="recommendations" class="tab-content">
+        <div class="panel">
+            <div class="panel-header">
+                💡 System Recommendations
+                <button class="button button-secondary" onclick="refreshRecommendations()">🔄 Refresh</button>
+            </div>
+            <div class="panel-content">
+                <div id="recommendationsList">Loading recommendations...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call Logs Tab -->
+    <div id="calls" class="tab-content">
+        <div class="panel">
+            <div class="panel-header">
+                📞 Recent Call Logs
+                <button class="button button-secondary" onclick="refreshCalls()">🔄 Refresh</button>
+            </div>
+            <div class="panel-content">
+                <div id="callsList">Loading call logs...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let summerviewKBOriginal = '';
+        let metaKBOriginal = '';
+
+        // Tab navigation
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Load data when tabs are activated
+            if (tabName === 'knowledge') {
+                loadSummerviewKB();
+                loadMetaKB();
+            } else if (tabName === 'gaps') {
+                refreshKnowledgeGaps();
+            } else if (tabName === 'recommendations') {
+                refreshRecommendations();
+            } else if (tabName === 'calls') {
+                refreshCalls();
+            }
+        }
+
+        // Knowledge Base Management
+        async function loadSummerviewKB() {
+            try {
+                const response = await fetch('/api/knowledge-base/summerview');
+                const data = await response.json();
+                summerviewKBOriginal = JSON.stringify(data, null, 2);
+                document.getElementById('summerviewKB').value = summerviewKBOriginal;
+            } catch (error) {
+                showError('summerviewError', 'Failed to load Summerview knowledge base');
+            }
+        }
+
+        async function loadMetaKB() {
+            try {
+                const response = await fetch('/api/knowledge-base/meta');
+                const data = await response.json();
+                metaKBOriginal = JSON.stringify(data, null, 2);
+                document.getElementById('metaKB').value = metaKBOriginal;
+            } catch (error) {
+                showError('metaError', 'Failed to load meta knowledge base');
+            }
+        }
+
+        async function saveSummerviewKB() {
+            try {
+                const content = document.getElementById('summerviewKB').value;
+                const data = JSON.parse(content);
+                
+                const response = await fetch('/api/knowledge-base/summerview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showSuccess('summerviewMessage', 'Summerview knowledge base saved successfully!');
+                    summerviewKBOriginal = content;
+                } else {
+                    showError('summerviewError', result.error || 'Failed to save');
+                }
+            } catch (error) {
+                showError('summerviewError', 'Invalid JSON format');
+            }
+        }
+
+        async function saveMetaKB() {
+            try {
+                const content = document.getElementById('metaKB').value;
+                const data = JSON.parse(content);
+                
+                const response = await fetch('/api/knowledge-base/meta', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showSuccess('metaMessage', 'Meta knowledge base saved successfully!');
+                    metaKBOriginal = content;
+                } else {
+                    showError('metaError', result.error || 'Failed to save');
+                }
+            } catch (error) {
+                showError('metaError', 'Invalid JSON format');
+            }
+        }
+
+        function formatSummerviewJSON() {
+            try {
+                const content = document.getElementById('summerviewKB').value;
+                const data = JSON.parse(content);
+                document.getElementById('summerviewKB').value = JSON.stringify(data, null, 2);
+            } catch (error) {
+                showError('summerviewError', 'Invalid JSON format - cannot format');
+            }
+        }
+
+        function formatMetaJSON() {
+            try {
+                const content = document.getElementById('metaKB').value;
+                const data = JSON.parse(content);
+                document.getElementById('metaKB').value = JSON.stringify(data, null, 2);
+            } catch (error) {
+                showError('metaError', 'Invalid JSON format - cannot format');
+            }
+        }
+
+        function resetSummerviewKB() {
+            if (confirm('Reset to last saved version? Unsaved changes will be lost.')) {
+                document.getElementById('summerviewKB').value = summerviewKBOriginal;
+            }
+        }
+
+        function resetMetaKB() {
+            if (confirm('Reset to last saved version? Unsaved changes will be lost.')) {
+                document.getElementById('metaKB').value = metaKBOriginal;
+            }
+        }
+
+        // Knowledge Gaps
+        async function refreshKnowledgeGaps() {
+            try {
+                const response = await fetch('/api/knowledge-gaps');
+                const gaps = await response.json();
+                displayKnowledgeGaps(gaps);
+            } catch (error) {
+                document.getElementById('knowledgeGaps').innerHTML = '<p>Failed to load knowledge gaps</p>';
+            }
+        }
+
+        function displayKnowledgeGaps(gaps) {
+            const container = document.getElementById('knowledgeGaps');
+            
+            if (gaps.length === 0) {
+                container.innerHTML = '<p>🎉 No knowledge gaps detected! System is performing well.</p>';
+                return;
+            }
+
+            const html = gaps.map(gap => `
+                <div class="gap-item expandable" onclick="toggleExpanded(this)">
+                    <div class="gap-header">
+                        <span class="gap-category">${gap.category || gap.topic}</span>
+                        <span class="gap-severity severity-${gap.severity || 'medium'}">${gap.severity || 'medium'}</span>
+                    </div>
+                    <div style="color: #666; font-size: 0.9em;">
+                        ${new Date(gap.timestamp).toLocaleString()} | Call: ${gap.callId || 'N/A'}
+                    </div>
+                    <div class="expanded-content">
+                        <strong>User Query:</strong> ${gap.userQuery || 'N/A'}<br>
+                        <strong>Tool Used:</strong> ${gap.toolName}<br>
+                        <strong>Recommendations:</strong>
+                        <ul>
+                            ${(gap.recommendations || []).map(rec => `<li>${rec.action}: ${rec.description}</li>`).join('')}
+                        </ul>
+                        <div class="json-preview">
+                            <strong>Tool Input:</strong><br>
+                            ${JSON.stringify(gap.toolInput, null, 2)}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Recommendations
+        async function refreshRecommendations() {
+            try {
+                const response = await fetch('/api/recommendations');
+                const recommendations = await response.json();
+                displayRecommendations(recommendations);
+            } catch (error) {
+                document.getElementById('recommendationsList').innerHTML = '<p>Failed to load recommendations</p>';
+            }
+        }
+
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendationsList');
+            
+            if (recommendations.length === 0) {
+                container.innerHTML = '<p>🎉 No recommendations at this time! System is running smoothly.</p>';
+                return;
+            }
+
+            const html = recommendations.map(rec => `
+                <div class="recommendation-item ${rec.priority}">
+                    <div class="recommendation-title">${rec.title}</div>
+                    <div>${rec.description}</div>
+                    <div class="recommendation-action"><strong>Action:</strong> ${rec.action}</div>
+                    ${rec.affectedCalls ? `<div style="margin-top: 5px; font-size: 0.8em; color: #666;">Affected calls: ${rec.affectedCalls}</div>` : ''}
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Call Logs
+        async function refreshCalls() {
+            try {
+                const response = await fetch('/api/calls');
+                const calls = await response.json();
+                displayCalls(calls);
+            } catch (error) {
+                document.getElementById('callsList').innerHTML = '<p>Failed to load call logs</p>';
+            }
+        }
+
+        function displayCalls(calls) {
+            const container = document.getElementById('callsList');
+            
+            if (calls.length === 0) {
+                container.innerHTML = '<p>No calls recorded yet.</p>';
+                return;
+            }
+
+            const html = calls.slice(0, 20).map(call => `
+                <div class="call-entry expandable" onclick="toggleExpanded(this)">
+                    <div class="call-header">
+                        <span class="call-id">${call.id}</span>
+                        <span class="call-status status-${call.status}">${call.status}</span>
+                    </div>
+                    <div style="color: #666; font-size: 0.9em;">
+                        ${new Date(call.timestamp).toLocaleString()} | Duration: ${Math.round(call.duration/1000)}s
+                    </div>
+                    <div style="margin-top: 5px;">
+                        Outcome: ${call.outcome}${call.appointmentBooked ? ' ✅' : ''}
+                    </div>
+                    <div class="expanded-content">
+                        <strong>Session ID:</strong> ${call.sessionId}<br>
+                        <strong>Knowledge Gaps:</strong> ${call.knowledgeGaps.length}<br>
+                        <strong>Transcript (${call.transcript.length} entries):</strong>
+                        <div class="json-preview" style="max-height: 300px;">
+                            ${call.transcript.map(entry => 
+                                `[${new Date(entry.timestamp).toLocaleTimeString()}] ${entry.speaker}: ${entry.content}`
+                            ).join('\\n')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // Dashboard Stats
+        async function refreshStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalCalls').textContent = stats.totalCalls;
+                document.getElementById('successRate').textContent = stats.successRate + '%';
+                document.getElementById('avgDuration').textContent = stats.avgDuration + 's';
+                document.getElementById('appointmentsBooked').textContent = stats.appointmentsBooked;
+                document.getElementById('toolErrors').textContent = stats.toolErrors || 0;
+                document.getElementById('unansweredQuestions').textContent = stats.unansweredQuestions || 0;
+                
+                // Get active calls count
+                const callsResponse = await fetch('/api/calls');
+                const calls = await callsResponse.json();
+                const activeCalls = calls.filter(call => call.status === 'active').length;
+                document.getElementById('activeCalls').textContent = activeCalls;
+                
+                // Get knowledge gaps count
+                const gapsResponse = await fetch('/api/knowledge-gaps');
+                const gaps = await gapsResponse.json();
+                document.getElementById('knowledgeGapCount').textContent = gaps.length;
+                
+            } catch (error) {
+                console.error('Failed to refresh stats:', error);
+            }
+        }
+
+        // Utility functions
+        function toggleExpanded(element) {
+            const content = element.querySelector('.expanded-content');
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+            } else {
+                content.style.display = 'block';
+            }
+        }
+
+        function showSuccess(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => element.style.display = 'none', 3000);
+        }
+
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+            setTimeout(() => element.style.display = 'none', 5000);
+        }
+
+        // System Prompt Functions
+        let currentSystemPrompt = '';
+        
+        async function loadSystemPrompt() {
+            try {
+                const response = await fetch('/api/system-prompt');
+                const data = await response.json();
+                currentSystemPrompt = data.prompt;
+                document.getElementById('systemPrompt').value = data.prompt;
+                showMessage('systemPromptMessage', 'System prompt loaded successfully');
+            } catch (error) {
+                showError('systemPromptError', 'Failed to load system prompt: ' + error.message);
+            }
+        }
+
+        async function saveSystemPrompt() {
+            try {
+                const prompt = document.getElementById('systemPrompt').value;
+                const response = await fetch('/api/system-prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+                
+                if (response.ok) {
+                    currentSystemPrompt = prompt;
+                    showMessage('systemPromptMessage', 'System prompt saved successfully');
+                } else {
+                    throw new Error('Failed to save system prompt');
+                }
+            } catch (error) {
+                showError('systemPromptError', 'Failed to save system prompt: ' + error.message);
+            }
+        }
+
+        function resetSystemPrompt() {
+            const defaultPrompt = `You are a professional medical office virtual assistant for Summerview Medical Centre.
+
+GREETING PROTOCOL:
+- If this is the very first interaction, greet with: "Hello! This is Summerview Medical Centre. This call is recorded for quality assurance. Please do not share any private medical information, symptoms, or health details during this call. I can help with scheduling, office information, and general services. How may I assist you today?"
+- If the user has already been greeted, do not repeat the greeting
+
+PRIVACY & RECORDING:
+- NEVER discuss medical information, symptoms, diagnoses, or treatments
+- IMMEDIATELY redirect medical questions: "I can't provide medical advice, but I'd be happy to schedule you with one of our healthcare providers."
+- Remind patients: "For your privacy, please don't share medical details over the phone."
+
+CONVERSATION STRUCTURE:
+1. Greeting (only once)
+2. Listen to their request
+3. Use appropriate tools for specific info
+4. Confirm details when booking
+5. Professional closing with contact info
+
+TOOL USAGE GUIDE:
+- Address/location/directions → searchClinicInfo(topic: "address")
+- Phone numbers/contact → searchClinicInfo(topic: "phone")
+- Hours/when open → searchClinicInfo(topic: "hours")
+- New patient inquiry → searchAppointmentInfo(request_type: "new patient")
+- Booking process → searchAppointmentInfo(request_type: "booking process")
+- After-hours care → searchAppointmentInfo(request_type: "after hours")
+- Services/treatments → searchServices(service_type: "[specific service]")
+- Common questions → getStandardResponse(question_type: "[type]")
+
+PERSONALITY:
+- Professional yet warm and friendly
+- Patient and understanding
+- Clear and concise
+- Helpful and proactive
+
+REMEMBER: You represent Summerview Medical Centre - maintain professionalism while being genuinely helpful.`;
+            
+            document.getElementById('systemPrompt').value = defaultPrompt;
+            showMessage('systemPromptMessage', 'System prompt reset to default');
+        }
+
+        // Knowledge Base Functions
+        async function loadSummerviewKB() {
+            try {
+                const response = await fetch('/api/knowledge-base/summerview');
+                const kb = await response.json();
+                summerviewKBOriginal = JSON.stringify(kb, null, 2);
+                document.getElementById('summerviewKB').value = summerviewKBOriginal;
+                showMessage('summerviewMessage', 'Knowledge base loaded successfully');
+            } catch (error) {
+                showError('summerviewError', 'Failed to load knowledge base: ' + error.message);
+            }
+        }
+
+        async function saveSummerviewKB() {
+            try {
+                const kbText = document.getElementById('summerviewKB').value;
+                const kb = JSON.parse(kbText);
+                
+                const response = await fetch('/api/knowledge-base/summerview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(kb)
+                });
+                
+                if (response.ok) {
+                    summerviewKBOriginal = kbText;
+                    showMessage('summerviewMessage', 'Knowledge base saved successfully');
+                } else {
+                    throw new Error('Failed to save knowledge base');
+                }
+            } catch (error) {
+                showError('summerviewError', 'Failed to save knowledge base: ' + error.message);
+            }
+        }
+
+        function formatSummerviewJSON() {
+            try {
+                const kbText = document.getElementById('summerviewKB').value;
+                const kb = JSON.parse(kbText);
+                document.getElementById('summerviewKB').value = JSON.stringify(kb, null, 2);
+                showMessage('summerviewMessage', 'JSON formatted successfully');
+            } catch (error) {
+                showError('summerviewError', 'Invalid JSON: ' + error.message);
+            }
+        }
+
+        function resetSummerviewKB() {
+            document.getElementById('summerviewKB').value = summerviewKBOriginal;
+            showMessage('summerviewMessage', 'Knowledge base reset to last saved version');
+        }
+
+        // Meta Knowledge Functions
+        async function loadMetaKB() {
+            try {
+                const response = await fetch('/api/meta-knowledge');
+                const meta = await response.json();
+                metaKBOriginal = JSON.stringify(meta, null, 2);
+                document.getElementById('metaKB').value = metaKBOriginal;
+                showMessage('metaMessage', 'Meta knowledge loaded successfully');
+            } catch (error) {
+                // If meta knowledge doesn't exist, load the template
+                try {
+                    const response = await fetch('/meta-knowledge-director-template.json');
+                    const template = await response.json();
+                    document.getElementById('metaKB').value = JSON.stringify(template, null, 2);
+                    showMessage('metaMessage', 'Loaded meta knowledge template');
+                } catch (templateError) {
+                    showError('metaError', 'Failed to load meta knowledge: ' + error.message);
+                }
+            }
+        }
+
+        async function saveMetaKB() {
+            try {
+                const metaText = document.getElementById('metaKB').value;
+                const meta = JSON.parse(metaText);
+                
+                const response = await fetch('/api/meta-knowledge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(meta)
+                });
+                
+                if (response.ok) {
+                    metaKBOriginal = metaText;
+                    showMessage('metaMessage', 'Meta knowledge saved successfully');
+                } else {
+                    throw new Error('Failed to save meta knowledge');
+                }
+            } catch (error) {
+                showError('metaError', 'Failed to save meta knowledge: ' + error.message);
+            }
+        }
+
+        function formatMetaJSON() {
+            try {
+                const metaText = document.getElementById('metaKB').value;
+                const meta = JSON.parse(metaText);
+                document.getElementById('metaKB').value = JSON.stringify(meta, null, 2);
+                showMessage('metaMessage', 'JSON formatted successfully');
+            } catch (error) {
+                showError('metaError', 'Invalid JSON: ' + error.message);
+            }
+        }
+
+        function resetMetaKB() {
+            document.getElementById('metaKB').value = metaKBOriginal;
+            showMessage('metaMessage', 'Meta knowledge reset to last saved version');
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStats();
+            setInterval(refreshStats, 10000); // Refresh every 10 seconds
+            
+            // Load knowledge bases when the tab is shown
+            const kbTab = document.querySelector('[onclick*="knowledge"]');
+            if (kbTab) {
+                kbTab.addEventListener('click', function() {
+                    loadSystemPrompt();
+                    loadSummerviewKB();
+                    loadMetaKB();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

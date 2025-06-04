@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Nova Sonic Debug Client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/src/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        #debug-console {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 12px;
+            overflow-y: auto;
+            padding: 10px;
+            border-top: 1px solid #333;
+        }
+        #debug-console .error { color: #f00; }
+        #debug-console .warning { color: #ff0; }
+        #debug-console .success { color: #0f0; }
+        #debug-console .info { color: #0ff; }
+        body { margin-bottom: 200px; }
+        .debug-section {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <h1>🐛 Nova Sonic Debug Client</h1>
+        
+        <div class="debug-section">
+            <h3>Connection Status</h3>
+            <div id="status" class="disconnected">Initializing...</div>
+            <div id="socket-status">Socket: Not connected</div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Session State</h3>
+            <div id="session-status">Session: Not initialized</div>
+            <div id="audio-status">Audio: Not ready</div>
+            <div id="streaming-status">Streaming: Not active</div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Controls</h3>
+            <button id="test-connection" class="button">Test Connection</button>
+            <button id="init-session" class="button">Initialize Session</button>
+            <button id="start" class="button">Start Streaming</button>
+            <button id="stop" class="button" disabled>Stop Streaming</button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Live Events</h3>
+            <div id="chat-container"></div>
+        </div>
+    </div>
+    
+    <div id="debug-console">
+        <div><strong>🐛 NOVA SONIC DEBUG CONSOLE</strong></div>
+        <div>============================================</div>
+    </div>
+
+    <script>
+        // Debug console
+        const debugConsole = document.getElementById('debug-console');
+        function debugLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `[${timestamp}] ${message}`;
+            debugConsole.appendChild(div);
+            debugConsole.scrollTop = debugConsole.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Status elements
+        const statusElement = document.getElementById('status');
+        const socketStatus = document.getElementById('socket-status');
+        const sessionStatus = document.getElementById('session-status');
+        const audioStatus = document.getElementById('audio-status');
+        const streamingStatus = document.getElementById('streaming-status');
+        const chatContainer = document.getElementById('chat-container');
+        
+        // Buttons
+        const testConnectionBtn = document.getElementById('test-connection');
+        const initSessionBtn = document.getElementById('init-session');
+        const startButton = document.getElementById('start');
+        const stopButton = document.getElementById('stop');
+
+        // State variables
+        let socket;
+        let audioContext;
+        let audioStream;
+        let isStreaming = false;
+        let sessionInitialized = false;
+        let processor;
+        let sourceNode;
+
+        debugLog("🚀 Starting Nova Sonic Debug Client...", "info");
+
+        // Initialize Socket.IO connection
+        function initSocket() {
+            debugLog("🔌 Attempting to connect to Socket.IO server...", "info");
+            
+            try {
+                socket = io();
+                
+                socket.on('connect', () => {
+                    debugLog("✅ Socket.IO connected successfully!", "success");
+                    socketStatus.textContent = "Socket: Connected ✅";
+                    statusElement.textContent = "Connected to server";
+                    statusElement.className = "connected";
+                    
+                    testConnectionBtn.disabled = false;
+                    initSessionBtn.disabled = false;
+                });
+
+                socket.on('disconnect', (reason) => {
+                    debugLog(`❌ Socket.IO disconnected: ${reason}`, "error");
+                    socketStatus.textContent = `Socket: Disconnected (${reason})`;
+                    statusElement.textContent = "Disconnected from server";
+                    statusElement.className = "disconnected";
+                    
+                    testConnectionBtn.disabled = true;
+                    initSessionBtn.disabled = true;
+                    startButton.disabled = true;
+                    sessionInitialized = false;
+                });
+
+                socket.on('connect_error', (error) => {
+                    debugLog(`❌ Socket.IO connection error: ${error.message}`, "error");
+                    socketStatus.textContent = `Socket: Error - ${error.message}`;
+                });
+
+                socket.on('error', (error) => {
+                    debugLog(`❌ Server error: ${JSON.stringify(error)}`, "error");
+                    statusElement.textContent = "Error: " + (error.message || JSON.stringify(error));
+                    statusElement.className = "error";
+                });
+
+                // Nova Sonic event handlers
+                socket.on('contentStart', (data) => {
+                    debugLog(`📝 Content start: ${JSON.stringify(data)}`, "info");
+                    addChatMessage('system', `Content start: ${data.type} (${data.role})`);
+                });
+
+                socket.on('textOutput', (data) => {
+                    debugLog(`💬 Text output: ${data.content?.substring(0, 100)}...`, "success");
+                    addChatMessage(data.role?.toLowerCase() || 'unknown', data.content);
+                });
+
+                socket.on('audioOutput', (data) => {
+                    debugLog(`🔊 Audio output received (${data.content?.length} chars)`, "info");
+                    addChatMessage('system', '[Audio output received]');
+                    
+                    // EXACT sample code implementation
+                    if (data.content) {
+                        try {
+                            const audioData = base64ToFloat32Array(data.content);
+                            audioPlayer.playAudio(audioData);
+                        } catch (error) {
+                            debugLog(`❌ Error playing audio: ${error.message}`, "error");
+                        }
+                    }
+                });
+
+                socket.on('streamComplete', () => {
+                    debugLog("✅ Stream completed", "success");
+                    addChatMessage('system', 'Stream completed');
+                    if (isStreaming) {
+                        stopStreaming();
+                    }
+                });
+
+                debugLog("🔌 Socket.IO event handlers registered", "info");
+                
+            } catch (error) {
+                debugLog(`❌ Failed to initialize Socket.IO: ${error.message}`, "error");
+                socketStatus.textContent = `Socket: Failed - ${error.message}`;
+            }
+        }
+
+        // Test connection function
+        function testConnection() {
+            debugLog("🧪 Testing server connection...", "info");
+            
+            if (!socket || !socket.connected) {
+                debugLog("❌ Socket not connected", "error");
+                return;
+            }
+
+            socket.emit('test', { message: 'Hello from debug client' });
+            debugLog("📤 Test message sent to server", "info");
+        }
+
+        // Initialize session
+        async function initializeSession() {
+            if (sessionInitialized) {
+                debugLog("⚠️ Session already initialized", "warning");
+                return;
+            }
+
+            debugLog("🔧 Initializing Nova Sonic session...", "info");
+            sessionStatus.textContent = "Session: Initializing...";
+
+            try {
+                // Step 1: Prompt start
+                debugLog("📤 Sending promptStart event...", "info");
+                socket.emit('promptStart');
+                
+                // Step 2: System prompt
+                const systemPrompt = "You are a helpful voice assistant for Summerview Medical Centre. This call is recorded for quality assurance.";
+                debugLog("📤 Sending systemPrompt event...", "info");
+                socket.emit('systemPrompt', systemPrompt);
+                
+                // Step 3: Audio start
+                debugLog("📤 Sending audioStart event...", "info");
+                socket.emit('audioStart');
+
+                sessionInitialized = true;
+                sessionStatus.textContent = "Session: Initialized ✅";
+                startButton.disabled = false;
+                debugLog("✅ Session initialized successfully", "success");
+                
+            } catch (error) {
+                debugLog(`❌ Session initialization failed: ${error.message}`, "error");
+                sessionStatus.textContent = `Session: Error - ${error.message}`;
+            }
+        }
+
+        // Initialize audio
+        async function initAudio() {
+            debugLog("🎤 Requesting microphone access...", "info");
+            audioStatus.textContent = "Audio: Requesting permission...";
+
+            try {
+                audioStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+
+                audioContext = new AudioContext({ sampleRate: 16000 });
+                await audioContext.resume();
+
+                debugLog("✅ Microphone access granted", "success");
+                audioStatus.textContent = "Audio: Ready ✅";
+
+            } catch (error) {
+                debugLog(`❌ Microphone access failed: ${error.message}`, "error");
+                audioStatus.textContent = `Audio: Error - ${error.message}`;
+            }
+        }
+
+        // Start streaming
+        async function startStreaming() {
+            if (isStreaming) {
+                debugLog("⚠️ Already streaming", "warning");
+                return;
+            }
+
+            if (!sessionInitialized) {
+                debugLog("❌ Session not initialized", "error");
+                return;
+            }
+
+            if (!audioStream) {
+                debugLog("❌ Audio not ready", "error");
+                return;
+            }
+
+            debugLog("🎙️ Starting audio streaming...", "info");
+            
+            try {
+                sourceNode = audioContext.createMediaStreamSource(audioStream);
+                processor = audioContext.createScriptProcessor(512, 1, 1);
+
+                processor.onaudioprocess = (e) => {
+                    if (!isStreaming) return;
+
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    const pcmData = new Int16Array(inputData.length);
+                    
+                    for (let i = 0; i < inputData.length; i++) {
+                        pcmData[i] = Math.max(-1, Math.min(1, inputData[i])) * 0x7FFF;
+                    }
+
+                    const base64Data = arrayBufferToBase64(pcmData.buffer);
+                    socket.emit('audioInput', base64Data);
+                };
+
+                sourceNode.connect(processor);
+                processor.connect(audioContext.destination);
+
+                isStreaming = true;
+                streamingStatus.textContent = "Streaming: Active 🔴";
+                startButton.disabled = true;
+                stopButton.disabled = false;
+                
+                debugLog("✅ Audio streaming started", "success");
+                addChatMessage('system', 'Listening... speak now');
+
+            } catch (error) {
+                debugLog(`❌ Failed to start streaming: ${error.message}`, "error");
+                streamingStatus.textContent = `Streaming: Error - ${error.message}`;
+            }
+        }
+
+        // Stop streaming
+        function stopStreaming() {
+            if (!isStreaming) {
+                debugLog("⚠️ Not currently streaming", "warning");
+                return;
+            }
+
+            debugLog("⏹️ Stopping audio streaming...", "info");
+
+            isStreaming = false;
+
+            if (processor) {
+                processor.disconnect();
+                sourceNode.disconnect();
+            }
+
+            // Clear any queued audio
+            stopAudioPlayback();
+
+            socket.emit('stopAudio');
+
+            streamingStatus.textContent = "Streaming: Stopped";
+            startButton.disabled = false;
+            stopButton.disabled = true;
+
+            debugLog("✅ Audio streaming stopped", "success");
+            addChatMessage('system', 'Processing...');
+        }
+
+        // Utility functions
+        function arrayBufferToBase64(buffer) {
+            const binary = [];
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary.push(String.fromCharCode(bytes[i]));
+            }
+            return btoa(binary.join(''));
+        }
+
+        // Audio processing functions
+        function base64ToFloat32Array(base64String) {
+            try {
+                const binaryString = window.atob(base64String);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                const int16Array = new Int16Array(bytes.buffer);
+                const float32Array = new Float32Array(int16Array.length);
+                for (let i = 0; i < int16Array.length; i++) {
+                    float32Array[i] = int16Array[i] / 32768.0;
+                }
+
+                return float32Array;
+            } catch (error) {
+                debugLog(`❌ Error in base64ToFloat32Array: ${error.message}`, "error");
+                throw error;
+            }
+        }
+
+        // EXACT AudioPlayer implementation from sample code
+        class AudioPlayer {
+            constructor() {
+                this.onAudioPlayedListeners = [];
+                this.initialized = false;
+            }
+
+            async start() {
+                this.audioContext = new AudioContext({ "sampleRate": 24000 });
+                this.analyser = this.audioContext.createAnalyser();
+                this.analyser.fftSize = 512;
+
+                // Inline worklet code
+                const workletCode = `
+                class ExpandableBuffer {
+                    constructor() {
+                        this.buffer = new Float32Array(24000);
+                        this.readIndex = 0;
+                        this.writeIndex = 0;
+                        this.underflowedSamples = 0;
+                        this.isInitialBuffering = true;
+                        this.initialBufferLength = 24000;
+                        this.lastWriteTime = 0;
+                    }
+
+                    write(samples) {
+                        if (this.writeIndex + samples.length <= this.buffer.length) {
+                            // Enough space
+                        } else {
+                            if (samples.length <= this.readIndex) {
+                                const subarray = this.buffer.subarray(this.readIndex, this.writeIndex);
+                                this.buffer.set(subarray);
+                            } else {
+                                const newLength = (samples.length + this.writeIndex - this.readIndex) * 2;
+                                const newBuffer = new Float32Array(newLength);
+                                newBuffer.set(this.buffer.subarray(this.readIndex, this.writeIndex));
+                                this.buffer = newBuffer;
+                            }
+                            this.writeIndex -= this.readIndex;
+                            this.readIndex = 0;
+                        }
+                        this.buffer.set(samples, this.writeIndex);
+                        this.writeIndex += samples.length;
+                        if (this.writeIndex - this.readIndex >= this.initialBufferLength) {
+                            this.isInitialBuffering = false;
+                        }
+                    }
+
+                    read(destination) {
+                        let copyLength = 0;
+                        if (!this.isInitialBuffering) {
+                            copyLength = Math.min(destination.length, this.writeIndex - this.readIndex);
+                        }
+                        destination.set(this.buffer.subarray(this.readIndex, this.readIndex + copyLength));
+                        this.readIndex += copyLength;
+                        if (copyLength < destination.length) {
+                            destination.fill(0, copyLength);
+                            this.underflowedSamples += destination.length - copyLength;
+                        }
+                        if (copyLength === 0) {
+                            this.isInitialBuffering = true;
+                        }
+                    }
+
+                    clearBuffer() {
+                        this.readIndex = 0;
+                        this.writeIndex = 0;
+                    }
+                }
+
+                class AudioPlayerProcessor extends AudioWorkletProcessor {
+                    constructor() {
+                        super();
+                        this.playbackBuffer = new ExpandableBuffer();
+                        this.port.onmessage = (event) => {
+                            if (event.data.type === "audio") {
+                                this.playbackBuffer.write(event.data.audioData);
+                            } else if (event.data.type === "barge-in") {
+                                this.playbackBuffer.clearBuffer();
+                            }
+                        };
+                    }
+
+                    process(inputs, outputs, parameters) {
+                        const output = outputs[0][0];
+                        this.playbackBuffer.read(output);
+                        return true;
+                    }
+                }
+
+                registerProcessor("audio-player-processor", AudioPlayerProcessor);
+                `;
+
+                const blob = new Blob([workletCode], { type: 'application/javascript' });
+                const workletUrl = URL.createObjectURL(blob);
+                
+                await this.audioContext.audioWorklet.addModule(workletUrl);
+                this.workletNode = new AudioWorkletNode(this.audioContext, "audio-player-processor");
+                this.workletNode.connect(this.analyser);
+                this.analyser.connect(this.audioContext.destination);
+                
+                this.initialized = true;
+                debugLog("✅ AudioPlayer initialized", "success");
+            }
+
+            stop() {
+                if (this.audioContext) {
+                    this.audioContext.close();
+                }
+                if (this.analyser) {
+                    this.analyser.disconnect();
+                }
+                if (this.workletNode) {
+                    this.workletNode.disconnect();
+                }
+                this.initialized = false;
+                this.audioContext = null;
+                this.analyser = null;
+                this.workletNode = null;
+            }
+
+            playAudio(samples) {
+                if (!this.initialized) {
+                    debugLog("❌ AudioPlayer not initialized", "error");
+                    return;
+                }
+                this.workletNode.port.postMessage({
+                    type: "audio",
+                    audioData: samples,
+                });
+            }
+
+            bargeIn() {
+                this.workletNode.port.postMessage({
+                    type: "barge-in",
+                });
+            }
+        }
+
+        // Initialize AudioPlayer
+        let audioPlayer;
+        async function initAudioPlayback() {
+            audioPlayer = new AudioPlayer();
+            await audioPlayer.start();
+        }
+
+        function addChatMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.margin = '5px 0';
+            messageDiv.style.padding = '5px';
+            messageDiv.style.backgroundColor = role === 'user' ? '#e3f2fd' : role === 'assistant' ? '#f3e5f5' : '#f5f5f5';
+            messageDiv.innerHTML = `<strong>${role.toUpperCase()}:</strong> ${content}`;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Event listeners
+        testConnectionBtn.addEventListener('click', testConnection);
+        initSessionBtn.addEventListener('click', initializeSession);
+        startButton.addEventListener('click', startStreaming);
+        stopButton.addEventListener('click', stopStreaming);
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', async () => {
+            debugLog("📱 DOM loaded, initializing components...", "info");
+            
+            initSocket();
+            await initAudio();
+            await initAudioPlayback();
+            
+            debugLog("🚀 Debug client fully initialized", "success");
+        });
+    </script>
+</body>
+
+</html>

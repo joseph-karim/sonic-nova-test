@@ -1,0 +1,184 @@
+{
+  "meta_knowledge_director": {
+    "version": "1.0",
+    "description": "Meta-level knowledge orchestration for voice assistant systems",
+    "last_updated": "2025-01-30",
+    
+    "knowledge_domains": {
+      "medical_office": {
+        "domain_id": "summerview_medical",
+        "description": "Medical office operations and patient services",
+        "knowledge_base_path": "./clean-summerview-kb.json",
+        "priority": 1,
+        "active": true,
+        "capabilities": [
+          "appointment_scheduling",
+          "office_information",
+          "service_descriptions",
+          "privacy_compliance"
+        ]
+      },
+      "hospitality": {
+        "domain_id": "hotel_services",
+        "description": "Hotel reservations and guest services",
+        "knowledge_base_path": "./hotel-kb.json",
+        "priority": 2,
+        "active": false,
+        "capabilities": [
+          "room_booking",
+          "cancellation_handling",
+          "amenity_information"
+        ]
+      }
+    },
+    
+    "tool_orchestration": {
+      "available_tools": [
+        {
+          "tool_id": "searchClinicInfo",
+          "domain": "medical_office",
+          "description": "Search for clinic location, hours, and contact information",
+          "confidence_threshold": 0.8,
+          "fallback_tool": "getStandardResponse"
+        },
+        {
+          "tool_id": "searchAppointmentInfo",
+          "domain": "medical_office",
+          "description": "Handle appointment booking and scheduling queries",
+          "confidence_threshold": 0.85,
+          "fallback_tool": "getStandardResponse"
+        },
+        {
+          "tool_id": "searchServices",
+          "domain": "medical_office",
+          "description": "Provide information about medical and wellness services",
+          "confidence_threshold": 0.8,
+          "fallback_tool": "getStandardResponse"
+        },
+        {
+          "tool_id": "getStandardResponse",
+          "domain": "all",
+          "description": "Provide pre-approved responses for common queries",
+          "confidence_threshold": 0.7,
+          "fallback_tool": null
+        }
+      ],
+      
+      "tool_selection_rules": {
+        "keyword_mapping": {
+          "address|location|directions|where": "searchClinicInfo",
+          "appointment|booking|schedule|book": "searchAppointmentInfo",
+          "service|treatment|wellness|medspa": "searchServices",
+          "hours|open|closed|time": "searchClinicInfo",
+          "phone|call|contact|email": "searchClinicInfo"
+        },
+        "intent_patterns": {
+          "location_query": {
+            "patterns": ["where are you", "how do I get to", "what's your address"],
+            "tool": "searchClinicInfo"
+          },
+          "booking_intent": {
+            "patterns": ["I want to book", "can I schedule", "make an appointment"],
+            "tool": "searchAppointmentInfo"
+          },
+          "service_inquiry": {
+            "patterns": ["what services", "do you offer", "tell me about"],
+            "tool": "searchServices"
+          }
+        }
+      }
+    },
+    
+    "conversation_management": {
+      "greeting_protocol": {
+        "initial_greeting": true,
+        "greeting_text": "Hello! This is Summerview Medical Centre. This call is recorded for quality assurance. Please do not share any private medical information, symptoms, or health details during this call. I can help with scheduling, office information, and general services. How may I assist you today?",
+        "repeat_greeting": false
+      },
+      
+      "privacy_enforcement": {
+        "detect_medical_info": true,
+        "medical_keywords": ["symptoms", "diagnosis", "treatment", "medication", "pain", "illness", "disease"],
+        "redirect_response": "I can't provide medical advice, but I'd be happy to schedule you with one of our healthcare providers.",
+        "log_attempts": true
+      },
+      
+      "conversation_boundaries": {
+        "max_conversation_length": 300,
+        "idle_timeout_seconds": 30,
+        "max_failed_tool_calls": 3,
+        "escalation_message": "I'm having difficulty helping with that. Would you like me to connect you with our office staff?"
+      }
+    },
+    
+    "knowledge_gap_detection": {
+      "tracking_enabled": true,
+      "gap_categories": [
+        "missing_information",
+        "tool_failure",
+        "unclear_intent",
+        "out_of_scope"
+      ],
+      "reporting_threshold": 5,
+      "auto_suggest_updates": true
+    },
+    
+    "quality_assurance": {
+      "call_recording": {
+        "enabled": true,
+        "retention_days": 30,
+        "transcript_generation": true
+      },
+      "performance_metrics": {
+        "track_tool_success_rate": true,
+        "track_conversation_completion": true,
+        "track_user_satisfaction": false,
+        "track_knowledge_gaps": true
+      },
+      "compliance": {
+        "hipaa_mode": true,
+        "pii_detection": true,
+        "audit_logging": true
+      }
+    },
+    
+    "system_prompts": {
+      "medical_office": {
+        "base_prompt": "You are a professional medical office virtual assistant for Summerview Medical Centre.",
+        "behavioral_guidelines": [
+          "Always maintain a professional, friendly tone",
+          "Never provide medical advice or diagnoses",
+          "Redirect medical questions to scheduling appointments",
+          "Protect patient privacy at all times",
+          "Use knowledge base tools for accurate information"
+        ],
+        "response_style": "concise, clear, and helpful"
+      }
+    },
+    
+    "fallback_strategies": {
+      "no_tool_match": {
+        "strategy": "polite_redirect",
+        "response": "I'd be happy to help you with scheduling, office hours, or general information about our services. What would you like to know?"
+      },
+      "tool_error": {
+        "strategy": "acknowledge_and_alternative",
+        "response": "I'm having a moment of difficulty accessing that information. Can I help you with something else, or would you prefer to call our office directly at (905) 503-4001?"
+      },
+      "out_of_scope": {
+        "strategy": "boundary_enforcement",
+        "response": "I'm specifically designed to help with appointment scheduling and general office information. For other matters, please call our office at (905) 503-4001."
+      }
+    },
+    
+    "adaptive_learning": {
+      "enabled": false,
+      "feedback_collection": true,
+      "pattern_recognition": {
+        "track_successful_interactions": true,
+        "track_failed_interactions": true,
+        "suggest_improvements": true
+      }
+    }
+  }
+}

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Wellness Care Medical Group - Virtual Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/src/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .medical-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .practice-name {
+            color: #2c5aa0;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .practice-tagline {
+            color: #666;
+            font-size: 16px;
+            margin: 5px 0 0 0;
+        }
+        
+        .privacy-notice {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .privacy-title {
+            color: #856404;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .privacy-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+        
+        .privacy-text {
+            color: #856404;
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+        
+        .consent-section {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .consent-checkbox {
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+        
+        .consent-label {
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .app-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .status-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .connection-status {
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: white;
+        }
+        
+        .status.connected { background: #28a745; }
+        .status.disconnected { background: #dc3545; }
+        .status.recording { background: #ffc107; color: #212529; }
+        
+        .recording-indicator {
+            display: flex;
+            align-items: center;
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .recording-dot {
+            width: 12px;
+            height: 12px;
+            background: #dc3545;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .chat-container {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #ffffff;
+        }
+        
+        .message {
+            margin: 15px 0;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+        
+        .message.user {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        
+        .message.assistant {
+            background: #e9ecef;
+            color: #495057;
+            margin-right: auto;
+        }
+        
+        .message.system {
+            background: #d1ecf1;
+            color: #0c5460;
+            margin: 0 auto;
+            text-align: center;
+            font-style: italic;
+            max-width: 90%;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .medical-button {
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .medical-button:hover:not(:disabled) {
+            background: #1e3d6f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .medical-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .medical-button.stop {
+            background: #dc3545;
+        }
+        
+        .medical-button.stop:hover:not(:disabled) {
+            background: #c82333;
+        }
+        
+        .audit-log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .audit-title {
+            color: #495057;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .audit-entries {
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .audit-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+            color: #495057;
+        }
+        
+        .timestamp {
+            color: #6c757d;
+            font-weight: bold;
+        }
+        
+        .footer-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Medical Practice Header -->
+    <div class="medical-header">
+        <h1 class="practice-name">🏥 Wellness Care Medical Group</h1>
+        <p class="practice-tagline">Your Health, Our Priority | Virtual Assistant</p>
+    </div>
+
+    <!-- Privacy Notice -->
+    <div class="privacy-notice">
+        <h3 class="privacy-title">
+            <svg class="privacy-icon" viewBox="0 0 24 24" fill="#856404">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+            </svg>
+            IMPORTANT PRIVACY NOTICE
+        </h3>
+        <div class="privacy-text">
+            <strong>This conversation is being recorded for quality assurance purposes.</strong>
+        </div>
+        <div class="privacy-text">
+            <strong>⚠️ DO NOT share any private medical information during this call.</strong> This virtual assistant can only help with:
+            <ul>
+                <li>📅 Appointment scheduling</li>
+                <li>ℹ️ Office hours and location</li>
+                <li>👨‍⚕️ Provider availability</li>
+                <li>💳 Insurance and payment information</li>
+                <li>📋 General services offered</li>
+            </ul>
+        </div>
+        <div class="consent-section">
+            <label class="consent-label">
+                <input type="checkbox" id="privacyConsent" class="consent-checkbox" required>
+                I understand this call is recorded and I will not share private medical information
+            </label>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div class="app-container">
+        <div class="status-section">
+            <div id="status" class="connection-status status disconnected">Disconnected</div>
+            <div id="recordingIndicator" class="recording-indicator" style="display: none;">
+                <div class="recording-dot"></div>
+                RECORDING
+            </div>
+        </div>
+
+        <div id="chat-container" class="chat-container">
+            <div class="message system">
+                Welcome to Wellness Care Medical Group Virtual Assistant. Click "Start Conversation" when ready to begin.
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="start" class="medical-button" disabled>Start Conversation</button>
+            <button id="stop" class="medical-button stop" disabled>End Call</button>
+        </div>
+    </div>
+
+    <!-- Audit Log -->
+    <div class="audit-log">
+        <h3 class="audit-title">
+            📋 Call Audit Log
+        </h3>
+        <div id="auditEntries" class="audit-entries">
+            <div class="audit-entry">
+                <span class="timestamp">[System Ready]</span> Medical Office Virtual Assistant initialized
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Information -->
+    <div class="footer-info">
+        <strong>Wellness Care Medical Group</strong><br>
+        2500 Health Plaza, Suite 150, Medford, OR 97504<br>
+        Phone: (541) 555-CARE (2273) | Emergency: Call 911<br>
+        Hours: Mon-Fri 8AM-5PM, Sat 9AM-2PM
+    </div>
+
+    <script type="module">
+        // Enhanced medical office version of main.js
+        const socket = io();
+        const startBtn = document.getElementById('start');
+        const stopBtn = document.getElementById('stop');
+        const statusDiv = document.getElementById('status');
+        const chatContainer = document.getElementById('chat-container');
+        const recordingIndicator = document.getElementById('recordingIndicator');
+        const auditEntries = document.getElementById('auditEntries');
+        const privacyConsent = document.getElementById('privacyConsent');
+
+        let mediaStream = null;
+        let audioContext = null;
+        let audioSource = null;
+        let processor = null;
+        let isRecording = false;
+        let sessionReady = false;
+
+        // Audit logging
+        function addAuditEntry(type, message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'audit-entry';
+            entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${type}: ${message}`;
+            auditEntries.appendChild(entry);
+            auditEntries.scrollTop = auditEntries.scrollHeight;
+        }
+
+        // Enable start button when privacy consent is given
+        privacyConsent.addEventListener('change', (e) => {
+            if (e.target.checked && sessionReady) {
+                startBtn.disabled = false;
+                addAuditEntry('CONSENT', 'Privacy consent acknowledged');
+            } else {
+                startBtn.disabled = true;
+            }
+        });
+
+        // Status updates
+        function updateStatus(message, className) {
+            statusDiv.textContent = message;
+            statusDiv.className = `connection-status status ${className}`;
+        }
+
+        // Message handling
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            messageDiv.textContent = content;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Log to audit trail
+            addAuditEntry(role.toUpperCase(), content.substring(0, 100) + (content.length > 100 ? '...' : ''));
+        }
+
+        // Audio conversion
+        function float32ToBase64(buffer) {
+            const int16Buffer = new Int16Array(buffer.length);
+            for (let i = 0; i < buffer.length; i++) {
+                int16Buffer[i] = Math.max(-1, Math.min(1, buffer[i])) * 0x7FFF;
+            }
+            const uint8Buffer = new Uint8Array(int16Buffer.buffer);
+            const binaryString = Array.from(uint8Buffer, byte => String.fromCharCode(byte)).join('');
+            return btoa(binaryString);
+        }
+
+        // Audio initialization
+        async function initAudio() {
+            try {
+                addAuditEntry('SYSTEM', 'Requesting microphone access');
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        sampleRate: 16000,
+                        channelCount: 1,
+                        echoCancellation: true,
+                        noiseSuppression: true
+                    }
+                });
+                
+                audioContext = new AudioContext({ sampleRate: 16000 });
+                audioSource = audioContext.createMediaStreamSource(mediaStream);
+                addAuditEntry('SYSTEM', 'Microphone access granted');
+                updateStatus('Ready - Please acknowledge privacy notice', 'connected');
+                
+            } catch (error) {
+                addAuditEntry('ERROR', `Microphone access denied: ${error.message}`);
+                updateStatus('Error: Could not access microphone', 'disconnected');
+            }
+        }
+
+        // Start recording
+        async function startRecording() {
+            if (isRecording || !sessionReady || !privacyConsent.checked) return;
+            
+            try {
+                addAuditEntry('SESSION', 'Starting medical office virtual assistant session');
+                updateStatus('Initializing...', 'recording');
+                recordingIndicator.style.display = 'flex';
+                
+                // Use medical office prompt
+                socket.emit('promptStart');
+                
+                setTimeout(() => {
+                    fetch('/prompts/medical_office.md')
+                        .then(response => response.text())
+                        .then(promptText => {
+                            socket.emit('systemPrompt', promptText);
+                            setTimeout(() => {
+                                socket.emit('audioStart');
+                                startAudioProcessing();
+                            }, 500);
+                        })
+                        .catch(error => {
+                            console.error('Error loading medical office prompt:', error);
+                            socket.emit('systemPrompt', 'You are a professional medical office virtual assistant. Help with scheduling and office information only. Never discuss medical details.');
+                            setTimeout(() => {
+                                socket.emit('audioStart');
+                                startAudioProcessing();
+                            }, 500);
+                        });
+                }, 500);
+                
+            } catch (error) {
+                addAuditEntry('ERROR', `Failed to start session: ${error.message}`);
+                updateStatus('Error starting session', 'disconnected');
+            }
+        }
+
+        // Audio processing
+        function startAudioProcessing() {
+            if (!audioContext || !audioSource) return;
+            
+            processor = audioContext.createScriptProcessor(512, 1, 1);
+            
+            processor.onaudioprocess = (event) => {
+                if (!isRecording) return;
+                
+                const inputData = event.inputBuffer.getChannelData(0);
+                const base64Data = float32ToBase64(inputData);
+                socket.emit('audioInput', base64Data);
+            };
+            
+            audioSource.connect(processor);
+            processor.connect(audioContext.destination);
+            
+            isRecording = true;
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            updateStatus('🎙️ Listening - Speak now', 'recording');
+            addMessage('system', 'Hello! I\'m your Wellness Care Medical Group virtual assistant. How can I help you today with scheduling or office information?');
+        }
+
+        // Stop recording
+        function stopRecording() {
+            if (!isRecording) return;
+            
+            addAuditEntry('SESSION', 'Ending virtual assistant session');
+            
+            if (processor) {
+                processor.disconnect();
+                processor = null;
+            }
+            
+            socket.emit('stopAudio');
+            isRecording = false;
+            startBtn.disabled = !privacyConsent.checked;
+            stopBtn.disabled = true;
+            recordingIndicator.style.display = 'none';
+            
+            updateStatus('Call ended', 'connected');
+        }
+
+        // Socket events
+        socket.on('connect', () => {
+            updateStatus('Connected - Getting ready...', 'connected');
+            sessionReady = true;
+            if (privacyConsent.checked) {
+                startBtn.disabled = false;
+            }
+            addAuditEntry('SYSTEM', 'Connected to medical office virtual assistant');
+        });
+
+        socket.on('disconnect', () => {
+            updateStatus('Disconnected', 'disconnected');
+            sessionReady = false;
+            startBtn.disabled = true;
+            stopBtn.disabled = true;
+            isRecording = false;
+            recordingIndicator.style.display = 'none';
+            addAuditEntry('SYSTEM', 'Disconnected from server');
+        });
+
+        socket.on('textOutput', (data) => {
+            addMessage('assistant', data.content);
+        });
+
+        socket.on('audioOutput', (data) => {
+            addMessage('assistant', '[Audio response received]');
+            addAuditEntry('AUDIO', 'Audio response played to caller');
+        });
+
+        socket.on('streamComplete', () => {
+            updateStatus('✅ Ready for next interaction', 'connected');
+            addAuditEntry('SYSTEM', 'Response stream completed');
+            if (isRecording) {
+                stopRecording();
+            }
+        });
+
+        socket.on('error', (error) => {
+            addAuditEntry('ERROR', error.message);
+            updateStatus(`Error: ${error.message}`, 'disconnected');
+            if (isRecording) {
+                stopRecording();
+            }
+        });
+
+        // Event listeners
+        startBtn.addEventListener('click', startRecording);
+        stopBtn.addEventListener('click', stopRecording);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initAudio();
+            addAuditEntry('SYSTEM', 'Medical Office Virtual Assistant interface loaded');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Nova Sonic Voice Assistant</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/src/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* Additional styles for improved UI */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .header p {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .status-panel {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .status-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #555;
+        }
+        
+        .session-status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        
+        .session-status.uninitialized {
+            background: #f0f0f0;
+            color: #666;
+        }
+        
+        .session-status.initializing {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .session-status.ready {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .session-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .control-panel {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-panel h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #555;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .init-button {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .init-button:hover:not(:disabled) {
+            background: #138496;
+        }
+        
+        .init-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .connection-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .connection-indicator.connected {
+            background: #28a745;
+        }
+        
+        .connection-indicator.disconnected {
+            background: #dc3545;
+        }
+        
+        #app {
+            max-width: none;
+        }
+        
+        #status {
+            margin-bottom: 20px;
+        }
+        
+        .auto-init-control {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .auto-init-control label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .auto-init-control input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        /* Debug panel styles */
+        details {
+            margin-top: 20px;
+        }
+        
+        details summary {
+            cursor: pointer;
+            user-select: none;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        
+        #debug-info {
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        #debug-info > div {
+            margin-bottom: 5px;
+        }
+        
+        #debug-info span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎙️ Nova Sonic Voice Assistant</h1>
+            <p>Enhanced with Explicit Session Management</p>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="status-panel">
+            <h3>Connection Status</h3>
+            <div id="connection-status">
+                <span class="connection-indicator disconnected" id="connection-indicator"></span>
+                <span id="connection-text">Disconnected</span>
+            </div>
+        </div>
+
+        <!-- Session Status -->
+        <div class="status-panel">
+            <h3>Session Status</h3>
+            <div id="session-status" class="session-status uninitialized">
+                Session not initialized
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <h3>Controls</h3>
+            <div class="controls">
+                <!-- Explicit Initialize Button -->
+                <button id="initialize" class="button init-button" disabled>
+                    🔧 Initialize Session
+                </button>
+                
+                <!-- Original Controls -->
+                <button id="start" class="button" disabled>🎤 Start Recording</button>
+                <button id="stop" class="button" disabled>⏹️ Stop Recording</button>
+            </div>
+            
+            <!-- Auto-init Toggle -->
+            <div class="auto-init-control">
+                <label>
+                    <input type="checkbox" id="auto-init" checked>
+                    Auto-initialize session on start
+                </label>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div id="app">
+            <div id="status" class="disconnected">Connecting to server...</div>
+            <div id="chat-container"></div>
+        </div>
+
+        <!-- Debug Panel (Optional) -->
+        <details>
+            <summary>🔍 Debug Information</summary>
+            <div id="debug-info">
+                <div>Socket ID: <span id="socket-id">-</span></div>
+                <div>Session ID: <span id="session-id">-</span></div>
+                <div>Audio Context State: <span id="audio-state">-</span></div>
+                <div>Stream Active: <span id="stream-state">false</span></div>
+            </div>
+        </details>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

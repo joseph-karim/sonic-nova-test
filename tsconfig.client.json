@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "es2020",
+    "outDir": "./public",
+    "rootDir": "./public",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "lib": ["es2020", "dom"]
+  },
+  "include": [
+    "public/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "public/**/*.js" // Exclude JS files within public from compilation
+  ]
+} 

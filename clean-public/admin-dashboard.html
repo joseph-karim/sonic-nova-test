@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Summerview Medical - Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .header {
+            background: #2c5aa0;
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .header .subtitle {
+            opacity: 0.9;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .panel-content {
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        .call-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .call-item {
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .call-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .call-header {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .call-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .call-time {
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .call-duration {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .call-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-active { background: #fff3cd; color: #856404; }
+        .status-error { background: #f8d7da; color: #721c24; }
+
+        .call-transcript {
+            padding: 15px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: none;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .call-transcript.visible {
+            display: block;
+        }
+
+        .transcript-entry {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .transcript-user {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .transcript-assistant {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .transcript-system {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            font-style: italic;
+        }
+
+        .speaker-label {
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .knowledge-gaps {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .gap-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8e91e;
+        }
+
+        .gap-item:last-child {
+            border-bottom: none;
+        }
+
+        .gap-question {
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .gap-count {
+            background: #ffc107;
+            color: #212529;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .knowledge-base {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .kb-section {
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .kb-header {
+            background: #e9ecef;
+            padding: 10px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .kb-content {
+            padding: 15px;
+            background: white;
+            display: none;
+        }
+
+        .kb-content.visible {
+            display: block;
+        }
+
+        .kb-item {
+            margin-bottom: 10px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🏥 Summerview Medical - Admin Dashboard</h1>
+        <div class="subtitle">Virtual Assistant Call Monitoring & Analytics</div>
+    </div>
+
+    <div class="main-container">
+        <!-- Call Statistics -->
+        <div class="panel">
+            <div class="panel-header">📊 Today's Statistics</div>
+            <div class="panel-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-number" id="totalCalls">23</span>
+                        <div class="stat-label">Total Calls</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="avgDuration">3:42</span>
+                        <div class="stat-label">Avg Duration</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="bookings">8</span>
+                        <div class="stat-label">Appointments</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="satisfaction">94%</span>
+                        <div class="stat-label">Success Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Knowledge Gaps -->
+        <div class="panel">
+            <div class="panel-header">⚠️ Knowledge Gaps Detected</div>
+            <div class="panel-content">
+                <div class="knowledge-gaps">
+                    <div class="gap-item">
+                        <span class="gap-question">COVID-19 testing procedures</span>
+                        <span class="gap-count">5</span>
+                    </div>
+                    <div class="gap-item">
+                        <span class="gap-question">Walk-in clinic hours</span>
+                        <span class="gap-count">3</span>
+                    </div>
+                    <div class="gap-item">
+                        <span class="gap-question">Prescription renewal process</span>
+                        <span class="gap-count">4</span>
+                    </div>
+                    <div class="gap-item">
+                        <span class="gap-question">Specialist referral timeline</span>
+                        <span class="gap-count">2</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary">Update Knowledge Base</button>
+            </div>
+        </div>
+
+        <!-- Recent Calls -->
+        <div class="panel full-width">
+            <div class="panel-header">📞 Recent Calls & Transcripts</div>
+            <div class="panel-content">
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="refreshCalls()">Refresh</button>
+                    <button class="btn btn-secondary" onclick="exportTranscripts()">Export All</button>
+                    <input type="text" class="search-box" placeholder="Search transcripts..." oninput="filterCalls(this.value)">
+                </div>
+                
+                <div class="call-list" id="callList">
+                    <!-- Call items will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Knowledge Base -->
+        <div class="panel full-width">
+            <div class="panel-header">📚 Summerview Medical Knowledge Base</div>
+            <div class="panel-content">
+                <input type="text" class="search-box" placeholder="Search knowledge base..." oninput="filterKnowledge(this.value)">
+                
+                <div class="knowledge-base">
+                    <div class="kb-section">
+                        <div class="kb-header" onclick="toggleKBSection(this)">
+                            Office Information
+                            <span>+</span>
+                        </div>
+                        <div class="kb-content">
+                            <div class="kb-item"><strong>Address:</strong> [TO BE UPDATED] Summerview Medical Centre</div>
+                            <div class="kb-item"><strong>Phone:</strong> [TO BE UPDATED] Main line</div>
+                            <div class="kb-item"><strong>Hours:</strong> [TO BE UPDATED] Operating hours</div>
+                            <div class="kb-item"><strong>Emergency:</strong> For emergencies call 911 or go to nearest emergency room</div>
+                        </div>
+                    </div>
+
+                    <div class="kb-section">
+                        <div class="kb-header" onclick="toggleKBSection(this)">
+                            Providers & Specialties
+                            <span>+</span>
+                        </div>
+                        <div class="kb-content">
+                            <div class="kb-item">[TO BE UPDATED] Add actual provider information from summerviewmedical.ca</div>
+                            <div class="kb-item">Family Medicine, Internal Medicine, Cardiology, etc.</div>
+                            <div class="kb-item">New patient acceptance status by provider</div>
+                        </div>
+                    </div>
+
+                    <div class="kb-section">
+                        <div class="kb-header" onclick="toggleKBSection(this)">
+                            Services & Procedures
+                            <span>+</span>
+                        </div>
+                        <div class="kb-content">
+                            <div class="kb-item">[TO BE UPDATED] Complete list of services offered</div>
+                            <div class="kb-item">Diagnostic testing available on-site</div>
+                            <div class="kb-item">Procedure scheduling requirements</div>
+                        </div>
+                    </div>
+
+                    <div class="kb-section">
+                        <div class="kb-header" onclick="toggleKBSection(this)">
+                            Insurance & Billing
+                            <span>+</span>
+                        </div>
+                        <div class="kb-content">
+                            <div class="kb-item">[TO BE UPDATED] Accepted insurance plans</div>
+                            <div class="kb-item">Payment options and billing procedures</div>
+                            <div class="kb-item">Coverage verification process</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample call data - in production this would come from your backend
+        const sampleCalls = [
+            {
+                id: 1,
+                timestamp: new Date(Date.now() - 1000 * 60 * 30),
+                duration: "4:23",
+                status: "completed",
+                transcript: [
+                    { speaker: "system", text: "Call started - Medical office virtual assistant" },
+                    { speaker: "user", text: "Hi, I'd like to schedule an appointment with Dr. Smith" },
+                    { speaker: "assistant", text: "I'd be happy to help you schedule an appointment. Let me check Dr. Smith's availability. Could you please provide your full name and preferred date?" },
+                    { speaker: "user", text: "My name is John Johnson and I was hoping for sometime next week" },
+                    { speaker: "assistant", text: "Thank you John. I have openings with Dr. Smith on Tuesday March 15th at 2 PM or Thursday March 17th at 10 AM. Which would work better for you?" },
+                    { speaker: "user", text: "Tuesday at 2 PM would be perfect" },
+                    { speaker: "assistant", text: "Excellent! I've scheduled you for Tuesday March 15th at 2 PM with Dr. Smith. Please arrive 15 minutes early for check-in. Is there anything else I can help you with today?" }
+                ],
+                outcome: "Appointment scheduled successfully"
+            },
+            {
+                id: 2,
+                timestamp: new Date(Date.now() - 1000 * 60 * 60),
+                duration: "2:15",
+                status: "completed",
+                transcript: [
+                    { speaker: "system", text: "Call started - Medical office virtual assistant" },
+                    { speaker: "user", text: "What are your office hours?" },
+                    { speaker: "assistant", text: "Our office hours are Monday through Friday 8 AM to 5 PM, and Saturday 9 AM to 2 PM. We're closed on Sundays. Is there anything else you'd like to know about our services?" },
+                    { speaker: "user", text: "Do you take new patients?" },
+                    { speaker: "assistant", text: "Yes, we are currently accepting new patients for family medicine with Dr. Chen and Dr. Kim. Dr. Rodriguez has a waitlist. Would you like me to help you schedule a new patient appointment?" }
+                ],
+                outcome: "Information provided - no booking requested"
+            },
+            {
+                id: 3,
+                timestamp: new Date(Date.now() - 1000 * 60 * 15),
+                duration: "1:45",
+                status: "active",
+                transcript: [
+                    { speaker: "system", text: "Call started - Medical office virtual assistant" },
+                    { speaker: "user", text: "I need to ask about my test results" },
+                    { speaker: "assistant", text: "I understand you're calling about test results. For privacy and accuracy, I cannot access or discuss specific medical information over this line. You'll need to speak directly with your healthcare provider or our nursing staff. Would you like me to help you schedule an appointment or transfer you to our nurse line?" }
+                ],
+                outcome: "Call in progress"
+            }
+        ];
+
+        // Populate call list
+        function populateCallList() {
+            const callList = document.getElementById('callList');
+            callList.innerHTML = '';
+
+            sampleCalls.forEach(call => {
+                const callItem = document.createElement('div');
+                callItem.className = 'call-item';
+                
+                const statusClass = `status-${call.status}`;
+                const timeStr = call.timestamp.toLocaleTimeString();
+                const dateStr = call.timestamp.toLocaleDateString();
+                
+                callItem.innerHTML = `
+                    <div class="call-header" onclick="toggleTranscript(${call.id})">
+                        <div class="call-info">
+                            <div class="call-time">${timeStr} - ${dateStr}</div>
+                            <div class="call-duration">Duration: ${call.duration} | ${call.outcome}</div>
+                        </div>
+                        <div class="call-status ${statusClass}">${call.status.toUpperCase()}</div>
+                    </div>
+                    <div class="call-transcript" id="transcript-${call.id}">
+                        ${call.transcript.map(entry => `
+                            <div class="transcript-entry transcript-${entry.speaker}">
+                                <div class="speaker-label">${entry.speaker}</div>
+                                ${entry.text}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                callList.appendChild(callItem);
+            });
+        }
+
+        // Toggle transcript visibility
+        function toggleTranscript(callId) {
+            const transcript = document.getElementById(`transcript-${callId}`);
+            transcript.classList.toggle('visible');
+        }
+
+        // Toggle knowledge base section
+        function toggleKBSection(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('span');
+            
+            content.classList.toggle('visible');
+            icon.textContent = content.classList.contains('visible') ? '-' : '+';
+        }
+
+        // Filter functions
+        function filterCalls(searchTerm) {
+            const callItems = document.querySelectorAll('.call-item');
+            const term = searchTerm.toLowerCase();
+            
+            callItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(term) ? 'block' : 'none';
+            });
+        }
+
+        function filterKnowledge(searchTerm) {
+            const kbSections = document.querySelectorAll('.kb-section');
+            const term = searchTerm.toLowerCase();
+            
+            kbSections.forEach(section => {
+                const text = section.textContent.toLowerCase();
+                section.style.display = text.includes(term) ? 'block' : 'none';
+            });
+        }
+
+        // Control functions
+        function refreshCalls() {
+            populateCallList();
+            // In production: fetch fresh data from backend
+            alert('Call list refreshed!');
+        }
+
+        function exportTranscripts() {
+            // In production: generate and download transcript file
+            alert('Exporting all transcripts...');
+        }
+
+        // Update stats periodically
+        function updateStats() {
+            // In production: fetch real-time stats from backend
+            const stats = {
+                totalCalls: Math.floor(Math.random() * 50) + 20,
+                avgDuration: `${Math.floor(Math.random() * 5) + 2}:${Math.floor(Math.random() * 60).toString().padStart(2, '0')}`,
+                bookings: Math.floor(Math.random() * 15) + 5,
+                satisfaction: Math.floor(Math.random() * 10) + 90
+            };
+            
+            Object.keys(stats).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.textContent = key === 'satisfaction' ? `${stats[key]}%` : stats[key];
+                }
+            });
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            populateCallList();
+            updateStats();
+            
+            // Update stats every 30 seconds
+            setInterval(updateStats, 30000);
+        });
+    </script>
+</body>
+
+</html>

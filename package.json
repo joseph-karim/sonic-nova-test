@@ -1,0 +1,43 @@
+{
+  "name": "nova-sonic-voice-agent",
+  "version": "1.0.0",
+  "description": "Amazon Nova Sonic Voice Agent Example",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "tsc",
+    "build:client": "tsc -p tsconfig.client.json",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.782.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.785.0",
+    "@aws-sdk/credential-providers": "^3.782.0",
+    "@smithy/node-http-handler": "^4.0.6",
+    "@smithy/types": "^4.3.1",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "express": "^4.19.2",
+    "rxjs": "^7.8.2",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "@types/socket.io-client": "^1.4.36",
+    "@types/uuid": "^9.0.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  },
+  "keywords": [
+    "aws",
+    "bedrock",
+    "nova-sonic",
+    "voice",
+    "agent"
+  ],
+  "author": "",
+  "license": "ISC"
+}
